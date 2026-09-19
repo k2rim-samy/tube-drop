@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TubeDrop Studio — YouTube Importer & Video Vault</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- App Styles -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Top Navigation -->
+        <header class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <div class="brand-icon">
+                        <i data-lucide="play-circle"></i>
+                    </div>
+                    <div class="brand-text">
+                        <span class="brand-name">TubeDrop<span class="brand-accent">Studio</span></span>
+                        <span class="brand-tag">Professional Video Vault</span>
+                    </div>
+                </div>
+
+                <div class="nav-stats">
+                    <div class="stat-pill" title="Total Videos in Library">
+                        <i data-lucide="film"></i>
+                        <span id="stat-videos-count">0 videos</span>
+                    </div>
+                    <div class="stat-pill" title="Total Disk Storage Used">
+                        <i data-lucide="hard-drive"></i>
+                        <span id="stat-storage-size">0 B</span>
+                    </div>
+                </div>
+
+                <div class="nav-actions">
+                    <button class="btn btn-outline" id="btn-refresh-library" title="Refresh Library">
+                        <i data-lucide="rotate-cw"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <a href="#quick-ingest-section" class="btn btn-primary">
+                        <i data-lucide="plus"></i>
+                        <span>Import Video</span>
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Hero / Ingest Section -->
+            <section class="ingest-section" id="quick-ingest-section">
+                <div class="ingest-card">
+                    <div class="ingest-tabs">
+                        <button class="tab-btn active" data-tab="tab-youtube">
+                            <i data-lucide="youtube" class="tab-icon-yt"></i>
+                            <span>Import from YouTube</span>
+                        </button>
+                        <button class="tab-btn" data-tab="tab-local">
+                            <i data-lucide="upload-cloud"></i>
+                            <span>Upload Local File</span>
+                        </button>
+                    </div>
+
+                    <!-- Tab 1: YouTube Ingestion -->
+                    <div class="tab-content active" id="tab-youtube">
+                        <div class="url-input-wrapper">
+                            <div class="input-prefix">
+                                <i data-lucide="link-2"></i>
+                            </div>
+                            <input 
+                                type="url" 
+                                id="youtube-url-input" 
+                                class="main-input" 
+                                placeholder="Paste YouTube link here (e.g., https://www.youtube.com/watch?v=... or Shorts)"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <div class="input-actions">
+                                <button class="btn-paste" id="btn-paste-clipboard" title="Paste from clipboard">
+                                    <i data-lucide="clipboard"></i>
+                                    <span>Paste</span>
+                                </button>
+                                <button class="btn btn-primary btn-inspect" id="btn-inspect-url">
+                                    <span class="btn-text">Inspect &amp; Preview</span>
+                                    <i data-lucide="arrow-right"></i>
+                                    <div class="spinner-small" style="display: none;"></div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="supported-badges">
+                            <span class="badge-item"><i data-lucide="check"></i> Regular Videos</span>
+                            <span class="badge-item"><i data-lucide="check"></i> YouTube Shorts</span>
+                            <span class="badge-item"><i data-lucide="check"></i> 1080p / 720p / MP3 Audio</span>
+                            <span class="badge-item"><i data-lucide="check"></i> Fast Server Download</span>
+                        </div>
+
+                        <!-- YouTube Video Inspection Preview Box (hidden by default) -->
+                        <div class="preview-box" id="yt-preview-box" style="display: none;">
+                            <div class="preview-content">
+                                <div class="preview-thumb-container">
+                                    <img id="preview-thumb" src="" alt="Thumbnail preview">
+                                    <span class="preview-duration-badge" id="preview-duration">00:00</span>
+                                    <button class="btn-watch-preview" id="btn-open-embed" title="Preview video in YouTube embed">
+                                        <i data-lucide="play"></i>
+                                    </button>
+                                </div>
+                                <div class="preview-details">
+                                    <div class="preview-header-row">
+                                        <span class="badge-yt-source"><i data-lucide="youtube"></i> YouTube Verified</span>
+                                        <span class="preview-meta" id="preview-views">0 views</span>
+                                    </div>
+                                    <h3 class="preview-title" id="preview-title">Video Title</h3>
+                                    <p class="preview-channel" id="preview-channel">Channel Name</p>
+                                    
+                                    <div class="import-options">
+                                        <div class="option-group">
+                                            <label for="select-quality"><i data-lucide="sliders"></i> Select Quality / Format:</label>
+                                            <select id="select-quality" class="form-select"></select>
+                                        </div>
+                                        <div class="option-group">
+                                            <label for="custom-title-input"><i data-lucide="edit-3"></i> Custom Title (Optional):</label>
+                                            <input type="text" id="custom-title-input" class="form-control" placeholder="Keep original title or edit">
+                                        </div>
+                                    </div>
+
+                                    <div class="preview-actions">
+                                        <button class="btn btn-secondary" id="btn-cancel-preview">Cancel</button>
+                                        <button class="btn btn-success btn-lg" id="btn-confirm-import">
+                                            <i data-lucide="download"></i>
+                                            <span>Download &amp; Import to Vault</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Local Video Upload -->
+                    <div class="tab-content" id="tab-local">
+                        <div class="dropzone" id="upload-dropzone">
+                            <input type="file" id="local-file-input" accept="video/*,audio/*" style="display: none;">
+                            <div class="dropzone-inner">
+                                <div class="dropzone-icon">
+                                    <i data-lucide="upload-cloud"></i>
+                                </div>
+                                <h3 class="dropzone-title">Drag and drop your video file here</h3>
+                                <p class="dropzone-sub">Supports MP4, WebM, MKV, MOV, MP3 audio (up to 2GB)</p>
+                                <button class="btn btn-secondary mt-3" id="btn-browse-files">
+                                    <i data-lucide="folder-open"></i>
+                                    <span>Browse Device</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Local Upload Form (Appears when file selected) -->
+                        <div class="local-upload-form" id="local-upload-form" style="display: none;">
+                            <div class="selected-file-info">
+                                <i data-lucide="file-video" class="file-icon"></i>
+                                <div class="file-details">
+                                    <span class="file-name" id="selected-file-name">filename.mp4</span>
+                                    <span class="file-size" id="selected-file-size">0 MB</span>
+                                </div>
+                                <button class="btn-icon" id="btn-remove-selected-file" title="Remove file">
+                                    <i data-lucide="x"></i>
+                                </button>
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <label for="local-title-input">Video Title</label>
+                                <input type="text" id="local-title-input" class="form-control" placeholder="Enter title for video">
+                            </div>
+
+                            <div class="form-actions mt-3">
+                                <button class="btn btn-secondary" id="btn-cancel-upload">Cancel</button>
+                                <button class="btn btn-primary" id="btn-start-upload">
+                                    <i data-lucide="upload"></i>
+                                    <span>Upload Video</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Background Downloads & Queue Section -->
+            <section class="tasks-section" id="tasks-section" style="display: none;">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i data-lucide="activity" class="pulse-icon"></i>
+                        <span>Live Import Tasks</span>
+                    </div>
+                    <span class="tasks-count-badge" id="tasks-count-badge">0 active</span>
+                </div>
+                <div class="tasks-container" id="tasks-container">
+                    <!-- Dynamic Task Cards -->
+                </div>
+            </section>
+
+            <!-- Library / Video Gallery Section -->
+            <section class="library-section">
+                <div class="library-controls-card">
+                    <div class="library-top-bar">
+                        <div class="library-heading">
+                            <i data-lucide="film" class="heading-icon"></i>
+                            <div>
+                                <h2>Media Vault</h2>
+                                <p class="subtext">All your imported YouTube videos and uploads, ready to stream or download.</p>
+                            </div>
+                        </div>
+
+                        <!-- Search Bar -->
+                        <div class="search-box">
+                            <i data-lucide="search" class="search-icon"></i>
+                            <input type="text" id="search-input" placeholder="Search by title, channel..." autocomplete="off">
+                            <button class="search-clear-btn" id="search-clear-btn" style="display: none;">
+                                <i data-lucide="x"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters and Sort Bar -->
+                    <div class="filter-sort-bar">
+                        <div class="filter-tabs">
+                            <button class="filter-pill active" data-filter="all">All Media (<span id="filter-all-count">0</span>)</button>
+                            <button class="filter-pill" data-filter="youtube">
+                                <i data-lucide="youtube" class="pill-yt-icon"></i> YouTube (<span id="filter-yt-count">0</span>)
+                            </button>
+                            <button class="filter-pill" data-filter="upload">
+                                <i data-lucide="hard-drive"></i> Local Uploads (<span id="filter-upload-count">0</span>)
+                            </button>
+                            <button class="filter-pill" data-filter="audio">
+                                <i data-lucide="music"></i> Audio Only
+                            </button>
+                        </div>
+
+                        <div class="sort-wrapper">
+                            <label for="sort-select"><i data-lucide="arrow-down-up"></i> Sort:</label>
+                            <select id="sort-select" class="sort-select">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="size_desc">Largest Size</option>
+                                <option value="duration_desc">Longest Duration</option>
+                                <option value="title_asc">Title (A-Z)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Grid Container -->
+                <div class="video-grid" id="video-grid">
+                    <!-- Cards rendered via JS -->
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state" id="empty-state" style="display: none;">
+                    <div class="empty-icon-wrapper">
+                        <i data-lucide="video-off"></i>
+                    </div>
+                    <h3>No videos in your vault yet</h3>
+                    <p>Paste a YouTube URL above or upload a video file to get started.</p>
+                    <button class="btn btn-primary mt-3" onclick="document.getElementById('youtube-url-input').focus()">
+                        <i data-lucide="link"></i>
+                        <span>Paste a YouTube Link</span>
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Video Player Modal -->
+        <div class="modal-backdrop" id="player-modal" style="display: none;">
+            <div class="modal-dialog modal-player">
+                <div class="modal-header">
+                    <div class="modal-title-wrap">
+                        <span class="badge-source" id="player-source-badge">YouTube</span>
+                        <h3 class="modal-video-title" id="player-video-title">Video Title</h3>
+                    </div>
+                    <button class="btn-close-modal" id="btn-close-player" title="Close player">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+
+                <div class="modal-body-player">
+                    <div class="player-container">
+                        <video id="studio-video" controls playsinline preload="metadata">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+
+                <div class="modal-footer-player">
+                    <div class="player-meta-info">
+                        <span id="player-channel-info"><i data-lucide="user"></i> Channel</span>
+                        <span id="player-format-info"><i data-lucide="file-video"></i> 1080p MP4</span>
+                        <span id="player-size-info"><i data-lucide="database"></i> 0 MB</span>
+                        <span id="player-duration-info"><i data-lucide="clock"></i> 00:00</span>
+                    </div>
+
+                    <div class="player-modal-actions">
+                        <button class="btn btn-secondary" id="player-copy-link-btn" title="Copy Stream Link">
+                            <i data-lucide="copy"></i>
+                            <span>Copy Link</span>
+                        </button>
+                        <a href="#" class="btn btn-primary" id="player-download-btn" download>
+                            <i data-lucide="download"></i>
+                            <span>Save to Device</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- YouTube Embed Preview Modal -->
+        <div class="modal-backdrop" id="embed-preview-modal" style="display: none;">
+            <div class="modal-dialog modal-embed">
+                <div class="modal-header">
+                    <div class="modal-title-wrap">
+                        <span class="badge-yt-source"><i data-lucide="youtube"></i> YouTube Live Preview</span>
+                        <h3 class="modal-video-title" id="embed-video-title">Preview Video</h3>
+                    </div>
+                    <button class="btn-close-modal" id="btn-close-embed" title="Close preview">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body-embed">
+                    <div class="embed-iframe-wrapper">
+                        <iframe id="embed-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal-backdrop" id="delete-modal" style="display: none;">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-header">
+                    <h3 class="modal-title text-danger">
+                        <i data-lucide="alert-triangle"></i>
+                        <span>Delete Video</span>
+                    </h3>
+                    <button class="btn-close-modal" id="btn-close-delete">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to permanently delete this video from your vault and remove the file from disk?</p>
+                    <p class="delete-target-title" id="delete-target-title"></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="btn-cancel-delete">Cancel</button>
+                    <button class="btn btn-danger" id="btn-confirm-delete">
+                        <i data-lucide="trash-2"></i>
+                        <span>Delete Permanently</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications Container -->
+        <div class="toast-container" id="toast-container"></div>
+    </div>
+
+    <!-- App Scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
