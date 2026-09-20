@@ -1,12 +1,2 @@
 flask>=3.0.0
 yt-dlp>=2024.0.0
-ydl_opts = {
-    'quiet': True,
-    'skip_download': True,
-    'no_warnings': True,
-    'extractor_args': {
-        'youtube': {
-            'player_client': ['android', 'web']
-        }
-    }
-}

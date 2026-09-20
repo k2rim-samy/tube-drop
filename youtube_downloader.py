@@ -1,7 +1,6 @@
 import os
 import uuid
 import re
-import tempfile
 import yt_dlp
 from utils import format_bytes, format_duration, download_thumbnail
 import database
@@ -9,6 +8,17 @@ import database
 BASE_DIR = tempfile.gettempdir() 
 UPLOADS_DIR = os.path.join(BASE_DIR, 'uploads')
 THUMBNAILS_DIR = os.path.join(BASE_DIR, 'thumbnails')
+
+ydl_opts = {
+    'quiet': True,
+    'skip_download': True,
+    'no_warnings': True,
+    'extractor_args': {
+        'youtube': {
+            'player_client': ['android', 'web']
+        }
+    }
+}
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(THUMBNAILS_DIR, exist_ok=True)
