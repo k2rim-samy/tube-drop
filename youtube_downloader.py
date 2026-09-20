@@ -5,8 +5,9 @@ import yt_dlp
 from utils import format_bytes, format_duration, download_thumbnail
 import database
 
-UPLOADS_DIR = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
-THUMBNAILS_DIR = os.path.join(os.path.dirname(__file__), 'static', 'thumbnails')
+BASE_DIR = tempfile.gettempdir() 
+UPLOADS_DIR = os.path.join(BASE_DIR, 'uploads')
+THUMBNAILS_DIR = os.path.join(BASE_DIR, 'thumbnails')
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(THUMBNAILS_DIR, exist_ok=True)
