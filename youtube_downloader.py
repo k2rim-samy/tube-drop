@@ -237,3 +237,17 @@ def download_youtube_video(task_id, url, quality='best', custom_title=None, task
             task_state['video_record'] = {**video_record, 'id': db_id}
 
         return db_id
+# تحديد المسار المباشر لملف الكوكي
+COOKIE_PATH = os.path.join(os.path.dirname(__file__), 'cookies.txt')
+
+ydl_opts = {
+    'quiet': True,
+    'skip_download': True,
+    'no_warnings': True,
+    'cookiefile': COOKIE_PATH if os.path.exists(COOKIE_PATH) else None,  # قراءة الكوكيز إذا كان الملف موجوداً
+    'extractor_args': {
+        'youtube': {
+            'player_client': ['android', 'ios']
+        }
+    }
+}
