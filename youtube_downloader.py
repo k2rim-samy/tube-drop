@@ -1,6 +1,7 @@
 import os
 import uuid
 import re
+import tempfile
 import yt_dlp
 from utils import format_bytes, format_duration, download_thumbnail
 import database
