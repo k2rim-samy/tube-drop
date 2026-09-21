@@ -1,6 +1,7 @@
 import os
 import uuid
 import re
+import shutil
 import yt_dlp
 from utils import format_bytes, format_duration, download_thumbnail
 import database
@@ -13,15 +14,32 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(THUMBNAILS_DIR, exist_ok=True)
 
 
+def _copy_cookie_to_writable_location(source_path):
+    if not source_path or not os.path.isfile(source_path):
+        return None
+
+    temp_dir = os.environ.get('TMPDIR') or '/tmp'
+    os.makedirs(temp_dir, exist_ok=True)
+
+    temp_cookie_path = os.path.join(temp_dir, 'cookies.txt')
+    try:
+        shutil.copy2(source_path, temp_cookie_path)
+        os.chmod(temp_cookie_path, 0o600)
+        return temp_cookie_path
+    except OSError:
+        return source_path
+
+
 def get_cookiefile_path():
     candidates = [
         COOKIE_PATH,
         os.path.join(os.getcwd(), 'cookies.txt'),
         os.path.join(os.path.dirname(__file__), 'cookies.txt'),
     ]
+
     for candidate in candidates:
         if candidate and os.path.isfile(candidate):
-            return candidate
+            return _copy_cookie_to_writable_location(candidate)
     return None
 
 
