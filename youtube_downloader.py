@@ -7,9 +7,41 @@ import database
 
 UPLOADS_DIR = '/tmp/uploads'
 THUMBNAILS_DIR = '/tmp/thumbnails'
+COOKIE_PATH = os.path.join(os.path.dirname(__file__), 'cookies.txt')
 
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 os.makedirs(THUMBNAILS_DIR, exist_ok=True)
+
+
+def get_cookiefile_path():
+    candidates = [
+        COOKIE_PATH,
+        os.path.join(os.getcwd(), 'cookies.txt'),
+        os.path.join(os.path.dirname(__file__), 'cookies.txt'),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.isfile(candidate):
+            return candidate
+    return None
+
+
+def get_yt_dlp_base_options(extra_options=None):
+    options = {
+        'quiet': True,
+        'no_warnings': True,
+        'js_runtimes': {'node': {}},
+        'remote_components': ['ejs:github'],
+    }
+
+    cookiefile = get_cookiefile_path()
+    if cookiefile:
+        options['cookiefile'] = cookiefile
+
+    if extra_options:
+        options.update(extra_options)
+
+    return options
+
 
 def sanitize_filename(name):
     clean = re.sub(r'[\\/*?:"<>|]', '', name)
@@ -17,14 +49,10 @@ def sanitize_filename(name):
     return clean or "video"
 
 def get_youtube_info(url):
-    ydl_opts = {
-        'quiet': True,
+    ydl_opts = get_yt_dlp_base_options({
         'skip_download': True,
-        'no_warnings': True,
-        'js_runtimes': {'node': {}},
-        'remote_components': ['ejs:github'],
-    }
-    
+    })
+
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
         
@@ -84,9 +112,9 @@ def get_youtube_info(url):
 def download_youtube_video(task_id, url, quality='best', custom_title=None, task_state=None):
     video_uuid = str(uuid.uuid4())
     output_tmpl = os.path.join(UPLOADS_DIR, f"{video_uuid}_%(title).100B.%(ext)s")
-    
+
     media_type = 'audio' if quality in ['mp3', 'm4a'] else 'video'
-    
+
     if quality == 'mp3':
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -106,36 +134,31 @@ def download_youtube_video(task_id, url, quality='best', custom_title=None, task
         format_name = 'M4A (Audio)'
     elif quality == '1080p':
         ydl_opts = {
-            'format': 'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best',
-            'merge_output_format': 'mp4',
+            'format': 'best[height<=1080][ext=mp4]/best[height<=1080]/best[ext=mp4]/best',
             'outtmpl': output_tmpl,
         }
         format_name = '1080p MP4'
     elif quality == '720p':
         ydl_opts = {
-            'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
-            'merge_output_format': 'mp4',
+            'format': 'best[height<=720][ext=mp4]/best[height<=720]/best[ext=mp4]/best',
             'outtmpl': output_tmpl,
         }
         format_name = '720p MP4'
     elif quality == '480p':
         ydl_opts = {
-            'format': 'bestvideo[height<=480]+bestaudio/best[height<=480]/best',
-            'merge_output_format': 'mp4',
+            'format': 'best[height<=480][ext=mp4]/best[height<=480]/best[ext=mp4]/best',
             'outtmpl': output_tmpl,
         }
         format_name = '480p MP4'
     elif quality == '360p':
         ydl_opts = {
-            'format': 'bestvideo[height<=360]+bestaudio/best[height<=360]/best',
-            'merge_output_format': 'mp4',
+            'format': 'best[height<=360][ext=mp4]/best[height<=360]/best[ext=mp4]/best',
             'outtmpl': output_tmpl,
         }
         format_name = '360p MP4'
     else: # best
         ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
-            'merge_output_format': 'mp4',
+            'format': 'best[ext=mp4]/best',
             'outtmpl': output_tmpl,
         }
         format_name = 'Max Quality MP4'
@@ -177,6 +200,8 @@ def download_youtube_video(task_id, url, quality='best', custom_title=None, task
     if task_state:
         task_state['status'] = 'fetching'
         task_state['status_text'] = 'Starting stream extraction...'
+
+    ydl_opts = get_yt_dlp_base_options(ydl_opts)
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
@@ -237,17 +262,11 @@ def download_youtube_video(task_id, url, quality='best', custom_title=None, task
             task_state['video_record'] = {**video_record, 'id': db_id}
 
         return db_id
-# تحديد المسار المباشر لملف الكوكي
-COOKIE_PATH = os.path.join(os.path.dirname(__file__), 'cookies.txt')
-
-ydl_opts = {
-    'quiet': True,
+ydl_opts = get_yt_dlp_base_options({
     'skip_download': True,
-    'no_warnings': True,
-    'cookiefile': COOKIE_PATH if os.path.exists(COOKIE_PATH) else None,  # قراءة الكوكيز إذا كان الملف موجوداً
     'extractor_args': {
         'youtube': {
             'player_client': ['android', 'ios']
         }
     }
-}
+})
